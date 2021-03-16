@@ -15,21 +15,33 @@ import org.rust.ide.actions.macroExpansion.MacroExpansionViewDetails
 import org.rust.ide.actions.macroExpansion.expandMacroForViewWithProgress
 import org.rust.ide.actions.macroExpansion.showMacroExpansionPopup
 import org.rust.lang.core.psi.RsMacroCall
-import org.rust.lang.core.psi.ext.ancestorOrSelf
+import org.rust.lang.core.psi.RsMetaItem
+import org.rust.lang.core.psi.ext.RsPossibleMacroCall
+import org.rust.lang.core.psi.ext.ancestors
 import org.rust.lang.core.psi.ext.isAncestorOf
+import org.rust.lang.core.psi.ext.isMacroCall
 
 abstract class RsShowMacroExpansionIntentionBase(private val expandRecursively: Boolean) :
-    RsElementBaseIntentionAction<RsMacroCall>() {
+    RsElementBaseIntentionAction<RsPossibleMacroCall>() {
 
     override fun getFamilyName() = text
 
-    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): RsMacroCall? {
-        val macroCall = element.ancestorOrSelf<RsMacroCall>() ?: return null
-        if (!macroCall.path.isAncestorOf(element) && element != macroCall.excl) return null
+    override fun findApplicableContext(project: Project, editor: Editor, element: PsiElement): RsPossibleMacroCall? {
+        val macroCall = element.ancestors
+            .filterIsInstance<RsPossibleMacroCall>()
+            .find { it.isMacroCall }
+
+        val isValidContext = when (macroCall) {
+            is RsMacroCall -> macroCall.path.isAncestorOf(element) || element == macroCall.excl
+            is RsMetaItem -> !expandRecursively
+            null -> false
+            else -> error("unreachable")
+        }
+        if (!isValidContext) return null
         return macroCall
     }
 
-    override fun invoke(project: Project, editor: Editor, ctx: RsMacroCall) {
+    override fun invoke(project: Project, editor: Editor, ctx: RsPossibleMacroCall) {
         val expansionDetails = expandMacroForViewWithProgress(project, ctx, expandRecursively)
 
         if (expansionDetails != null) {

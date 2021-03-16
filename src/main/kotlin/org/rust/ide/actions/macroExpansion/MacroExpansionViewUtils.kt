@@ -91,7 +91,7 @@ private fun getMacroExpansionViewTitle(macroToExpand: RsPossibleMacroCall, expan
         } else {
             "#[$path]"
         }
-        else -> ""
+        else -> error("unreachable")
     }
     return if (expandRecursively) {
         "Recursive expansion of $name"
