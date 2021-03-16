@@ -192,7 +192,9 @@ class RsPsiManagerImpl(val project: Project) : RsPsiManager, Disposable {
 
         // Whitespace/comment changes are meaningful for macros only
         // (b/c they affect range mappings and body hashes)
-        if (isWhitespaceOrComment && owner !is RsMacroCall && owner !is RsMacro) return
+        if (isWhitespaceOrComment) {
+            if (owner !is RsMacroCall && owner !is RsMacro && !RsProcMacroPsiUtil.canBeInProcMacroCallBody(psi)) return
+        }
 
         val isStructureModification = owner == null || !owner.incModificationCount(psi)
 

@@ -149,7 +149,7 @@ val RsMacroCall.bodyHash: HashCode?
 fun RsMacroCall.resolveToMacro(): RsMacro? =
     path.reference?.resolve() as? RsMacro
 
-val RsMacroCall.expansion: MacroExpansion?
+val RsPossibleMacroCall.expansion: MacroExpansion?
     get() {
         val mgr = project.macroExpansionManager
         if (mgr.expansionState != null) return mgr.getExpansionFor(this).value
